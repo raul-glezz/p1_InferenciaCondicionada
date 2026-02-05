@@ -1,59 +1,51 @@
-# Makefile para Práctica 1: Probabilidad Condicionada
-# Universidad de La Laguna - Inteligencia Artificial Avanzada
+CXX := g++
+CXXFLAGS := -std=c++23
+LDFLAGS := -lstdc++
 
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2
-TARGET = inference_demo
-SRC_DIR = src
-OBJ_DIR = obj
-BIN_DIR = bin
+SRCDIR := src
+OBJDIR := obj
 
-# Archivos fuente
-SOURCES = $(SRC_DIR)/main.cc \
-          $(SRC_DIR)/distribution/binary_distribution/binary_distribution.cc \
-          $(SRC_DIR)/conditional_inference_engine/conditional_inference_engine.cc
+# Descubre todos los .cc recursivamente bajo src
+SRC := $(shell find $(SRCDIR) -name '*.cc')
+# Genera los objetos correspondientes bajo obj, reflejando la estructura de directorios
+OBJ := $(patsubst $(SRCDIR)/%.cc, $(OBJDIR)/%.o, $(SRC))
 
-# Archivos objeto
-OBJECTS = $(OBJ_DIR)/main.o \
-          $(OBJ_DIR)/binary_distribution.o \
-          $(OBJ_DIR)/conditional_inference_engine.o
+BIN := p1_InferenciaCondicionada
 
-# Regla principal
-all: directories $(BIN_DIR)/$(TARGET)
+.PHONY: all clean
 
-# Crear directorios necesarios
-directories:
-	@mkdir -p $(OBJ_DIR) $(BIN_DIR)
+all: $(BIN)
 
-# Enlazar ejecutable
-$(BIN_DIR)/$(TARGET): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
-	@echo "✓ Compilación completada: $(BIN_DIR)/$(TARGET)"
+$(BIN): $(OBJ)
+	@echo "Enlazando $^ --> $@"
+	@$(CXX) $^ -o $@ $(LDFLAGS)
 
-# Compilar main.cc
-$(OBJ_DIR)/main.o: $(SRC_DIR)/main.cc
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+# Regla genérica: compila cualquier src/%.cc a obj/%.o, creando subdirectorios si hace falta
+$(OBJDIR)/%.o: $(SRCDIR)/%.cc
+	@echo "Compilando $< --> $@"
+	@mkdir -p $(dir $@)
+	@$(CXX) $(CXXFLAGS) -I$(SRCDIR) -c $< -o $@
 
-# Compilar binary_distribution.cc
-$(OBJ_DIR)/binary_distribution.o: $(SRC_DIR)/distribution/binary_distribution/binary_distribution.cc
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+run: $(BIN)
+	@echo "Configuraciones disponibles en data/:"; \
+	ls -1 data/config*.txt 2>/dev/null || echo "No hay configuraciones disponibles."; \
+	echo ""; \
+	while true; do \
+		read -p "Ingrese el número de configuración: " number; \
+		input="data/config$${number}.txt"; \
+		if [ -f "$$input" ]; then \
+			break; \
+		else \
+			echo "Error: No existe el archivo $$input."; \
+			echo ""; \
+			echo "Configuraciones disponibles en data/:"; \
+			ls -1 data/config*.txt 2>/dev/null || echo "No hay configuraciones disponibles."; \
+			echo ""; \
+		fi; \
+	done; \
+	./$(BIN) "$$input"; \
+	echo ""; \
 
-# Compilar conditional_inference_engine.cc
-$(OBJ_DIR)/conditional_inference_engine.o: $(SRC_DIR)/conditional_inference_engine/conditional_inference_engine.cc
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Limpiar archivos generados
 clean:
-	rm -rf $(OBJ_DIR) $(BIN_DIR) test_distribution.csv
-	@echo "✓ Archivos de compilación eliminados"
-
-# Ejecutar el programa
-run: all
-	@echo "\n▶ Ejecutando el programa...\n"
-	@./$(BIN_DIR)/$(TARGET)
-
-# Compilar con información de depuración
-debug: CXXFLAGS += -g -DDEBUG
-debug: clean all
-
-.PHONY: all clean run debug directories
+	@echo "Limpiando..."
+	@rm -rf $(OBJDIR) $(BIN)
