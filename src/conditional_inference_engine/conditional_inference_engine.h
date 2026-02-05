@@ -39,7 +39,7 @@ class ConditionalInferenceEngine {
  public:
   explicit ConditionalInferenceEngine(const BinaryDistribution& jointDist);
   double* prob_cond_bin(uint64_t maskC, uint64_t valC, uint64_t maskI);
-    
+
  protected:
   bool isConsistent(uint64_t state, uint64_t maskC, uint64_t valC) const;
   uint64_t extractInterestBits(uint64_t state, uint64_t maskI) const;
