@@ -21,30 +21,38 @@
 #include <chrono>
 #include <vector>
 
-/**
- * @brief Resultado de una inferencia condicional
- */
 struct InferenceResult {
-    std::unique_ptr<BinaryDistribution> distribution;  // Distribución condicional resultante
-    double executionTime;                              // Tiempo de ejecución en microsegundos
-    uint64_t statesEvaluated;                          // Número de estados evaluados
-    
-    InferenceResult() : distribution(nullptr), executionTime(0.0), statesEvaluated(0) {}
+  //------------------------------------CONSTRUCTOR------------------------------------
+  InferenceResult() : distribution(nullptr), execution_time(0.0), states_evaluated(0) {}
+  
+  /// distribution: Distribución condicional resultante
+  std::unique_ptr<BinaryDistribution> distribution;
+  /// execution_time: Tiempo de ejecución del proceso de inferencia en segundos
+  double execution_time;
+  /// states_evaluated: Número de estados evaluados durante la inferencia
+  uint64_t states_evaluated;
 };
 
-/**
- * @brief Motor de inferencia para distribuciones binarias
- */
 class ConditionalInferenceEngine {
  public:
-  explicit ConditionalInferenceEngine(const BinaryDistribution& jointDist);
-  double* prob_cond_bin(uint64_t maskC, uint64_t valC, uint64_t maskI);
+  //-------------------------CONSTRUCTOR-------------------------
+  explicit ConditionalInferenceEngine(const BinaryDistribution&);
+
+  //----------------------MÉTODO----------------------
+  /// Método para calcular la distribución condicional P(X_I | X_C = c) usando marginalización
+  double* prob_cond_bin(uint64_t, uint64_t, uint64_t);
 
  protected:
-  bool isConsistent(uint64_t state, uint64_t maskC, uint64_t valC) const;
-  uint64_t extractInterestBits(uint64_t state, uint64_t maskI) const;
-  int countBits(uint64_t mask) const;
+  //-----------------MÉTODOS PROTEGIDOS-----------------
+  /// Método para verificar si una configuración es consistente con las condiciones
+  bool isConsistent(uint64_t, uint64_t, uint64_t) const;
+  /// Método para extraer el valor de las variables de interés de un estado
+  uint64_t extractInterestBits(uint64_t, uint64_t) const;
+  /// Método para contar el número de bits activos en una máscara
+  int countBits(uint64_t) const;
 
  private:
+  //-----------------ATRIBUTO-----------------
+  /// jointDistribution_: Referencia a la distribución conjunta sobre la que se realizarán las inferencias
   const BinaryDistribution& jointDistribution_;
 };

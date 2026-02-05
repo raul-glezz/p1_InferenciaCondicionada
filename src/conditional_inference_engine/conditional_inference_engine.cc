@@ -21,93 +21,90 @@
 
 /**
  * @brief Constructor del motor de inferencia
- * @param jointDist Distribución conjunta sobre la que realizar inferencias
+ * @param[in] joint_distribution: Distribución conjunta sobre la que realizar inferencias
  */
-ConditionalInferenceEngine::ConditionalInferenceEngine(const BinaryDistribution& jointDist)
-  : jointDistribution_(jointDist) {
-}
+ConditionalInferenceEngine::ConditionalInferenceEngine(const BinaryDistribution& joint_distribution) : 
+  jointDistribution_(joint_distribution) {}
 
 /**
- * @brief Versión de bajo nivel que devuelve array de doubles
- * @param maskC Máscara de variables condicionadas
- * @param valC Valores de variables condicionadas
- * @param maskI Máscara de variables de interés
- * @return Array con probabilidades condicionales (el llamador debe liberar memoria)
+ * @brief Método para calcular la distribución condicional P(X_I | X_C = c) usando marginalización
+ * @param[in] maskC: Máscara de variables condicionadas
+ * @param[in] valC: Valores de variables condicionadas
+ * @param[in] maskI: Máscara de variables de interés
+ * @return Array con probabilidades condicionales
  */
 double* ConditionalInferenceEngine::prob_cond_bin(uint64_t maskC, uint64_t valC, uint64_t maskI) {
-  int numInterestBits = countBits(maskI);
-  uint64_t interestStates = 1ULL << numInterestBits;
+  int number_interest_bits = countBits(maskI);
+  uint64_t interest_states = 1ULL << number_interest_bits;
 
-  // Asignar memoria para el resultado
-  double* out = new double[interestStates];
-  std::memset(out, 0, interestStates * sizeof(double));
+  // Asignamos memoria para el resultado
+  double* out = new double[interest_states];
+  std::memset(out, 0, interest_states * sizeof(double));
 
-  // Iterar sobre todos los estados
-  uint64_t totalStates = jointDistribution_.getStateSpaceSize();
-
-  for (uint64_t state = 0; state < totalStates; ++state) {
-      if (isConsistent(state, maskC, valC)) {
-          uint64_t interestIdx = extractInterestBits(state, maskI);
-          out[interestIdx] += jointDistribution_.getProbability(state);
-      }
+  uint64_t total_states = jointDistribution_.getStateSpaceSize();
+  // Iteramos sobre todos los estados para acumular probabilidades consistentes con las condiciones
+  for (uint64_t state = 0; state < total_states; ++state) {
+    if (isConsistent(state, maskC, valC)) {
+      uint64_t interest_idx = extractInterestBits(state, maskI);
+      out[interest_idx] += jointDistribution_.getProbability(state);
+    }
   }
 
-  // Normalizar
+  // Normalizamos el resultado para obtener una distribución válida
   double sum = 0.0;
-  for (uint64_t i = 0; i < interestStates; ++i) {
-      sum += out[i];
-  }
-
+  for (uint64_t i = 0; i < interest_states; ++i) { sum += out[i]; }
   if (sum > 1e-10) {
-      for (uint64_t i = 0; i < interestStates; ++i) {
-          out[i] /= sum;
-      }
+    for (uint64_t i = 0; i < interest_states; ++i) {
+      out[i] /= sum;
+    }
   }
 
   return out;
 }
 
 /**
- * @brief Verifica si una configuración es consistente con las condiciones
- * @param state Estado completo
- * @param maskC Máscara de variables condicionadas
- * @param valC Valores esperados
+ * @brief Método para verificar si una configuración es consistente con las condiciones
+ * @param[in] state Estado completo
+ * @param[in] maskC Máscara de variables condicionadas
+ * @param[in] valC Valores esperados
  */
 bool ConditionalInferenceEngine::isConsistent(uint64_t state, uint64_t maskC, uint64_t valC) const {
-    // Un estado es consistente si los bits marcados en maskC tienen los valores de valC
-    return (state & maskC) == valC;
+  // Un estado es consistente si los bits marcados en maskC tienen los valores de valC
+  return (state & maskC) == valC;
 }
 
 /**
- * @brief Extrae el valor de las variables de interés de un estado
- * @param state Estado completo
- * @param maskI Máscara de variables de interés
+ * @brief Método para extraer los bits de interés de un estado dado una máscara
+ * @param[in] state: Estado completo
+ * @param[in] maskI: Máscara de variables de interés
  */
 uint64_t ConditionalInferenceEngine::extractInterestBits(uint64_t state, uint64_t maskI) const {
-    // Extraer solo los bits marcados en maskI y compactarlos
-    uint64_t result = 0;
-    int resultBit = 0;
-    
-    for (int bit = 0; bit < 64; ++bit) {
-        if (maskI & (1ULL << bit)) {
-            if (state & (1ULL << bit)) {
-                result |= (1ULL << resultBit);
-            }
-            resultBit++;
-        }
+  // Extraer solo los bits marcados en maskI y compactarlos
+  uint64_t result = 0;
+  int resultBit = 0;
+  
+  for (int bit = 0; bit < 64; ++bit) {
+    if (maskI & (1ULL << bit)) {
+      if (state & (1ULL << bit)) {
+        result |= (1ULL << resultBit);
+      }
+      resultBit++;
     }
-    
-    return result;
+  }
+  
+  return result;
 }
 
 /**
- * @brief Cuenta el número de bits activos en una máscara
+ * @brief Método para contar el número de bits a 1 en una máscara
+ * @param[in] mask: Máscara a analizar
+ * @return Número de bits a 1 en la máscara
  */
 int ConditionalInferenceEngine::countBits(uint64_t mask) const {
-    int count = 0;
-    while (mask) {
-        count += mask & 1;
-        mask >>= 1;
-    }
-    return count;
+  int count = 0;
+  while (mask) {
+    count += mask & 1;
+    mask >>= 1;
+  }
+  return count;
 }
