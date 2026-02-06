@@ -13,6 +13,8 @@
  *         que representa una consulta condicional sobre variables binarias discretas.
  */
 
+#pragma once
+
 #include <vector>
 #include <cstdint>
 #include <stdexcept>

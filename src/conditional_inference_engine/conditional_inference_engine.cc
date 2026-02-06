@@ -38,28 +38,56 @@ double* ConditionalInferenceEngine::prob_cond_bin(uint64_t maskC, uint64_t valC,
   uint64_t interest_states = 1ULL << number_interest_bits;
 
   // Asignamos memoria para el resultado
-  double* out = new double[interest_states];
-  std::memset(out, 0, interest_states * sizeof(double));
+  double* output = new double[interest_states];
+  std::memset(output, 0, interest_states * sizeof(double));
 
   uint64_t total_states = jointDistribution_.getStateSpaceSize();
   // Iteramos sobre todos los estados para acumular probabilidades consistentes con las condiciones
   for (uint64_t state = 0; state < total_states; ++state) {
     if (isConsistent(state, maskC, valC)) {
       uint64_t interest_idx = extractInterestBits(state, maskI);
-      out[interest_idx] += jointDistribution_.getProbability(state);
+      output[interest_idx] += jointDistribution_.getProbability(state);
     }
   }
 
   // Normalizamos el resultado para obtener una distribución válida
   double sum = 0.0;
-  for (uint64_t i = 0; i < interest_states; ++i) { sum += out[i]; }
+  for (uint64_t i = 0; i < interest_states; ++i) { sum += output[i]; }
   if (sum > 1e-10) {
     for (uint64_t i = 0; i < interest_states; ++i) {
-      out[i] /= sum;
+      output[i] /= sum;
     }
   }
 
-  return out;
+  return output;
+}
+
+/**
+ * @brief Método principal para calcular la distribución condicional P(X_I | X_C = c)
+ * @param[in] query: Consulta condicional que especifica las variables de interés y condicionadas
+ * @return Estructura con la distribución condicional resultante y métricas de ejecución
+ */
+InferenceResult ConditionalInferenceEngine::computeConditional(const ConditionalQuery& query) {
+  InferenceResult result;
+
+  auto start = std::chrono::high_resolution_clock::now();
+
+  double* output = prob_cond_bin(query.getMaskC(), query.getValC(), query.getMaskI());
+  int number_interest_bits = countBits(query.getMaskI());
+  uint64_t interest_states = 1ULL << number_interest_bits;
+  
+  // Creamos la distribución condicional resultante a partir del array de probabilidades
+  auto distribution = std::make_unique<BinaryDistribution>(number_interest_bits);
+  for (uint64_t i = 0; i < interest_states; ++i) {
+    distribution->setProbability(i, output[i]);
+  }
+
+  auto end = std::chrono::high_resolution_clock::now();
+  result.execution_time = std::chrono::duration<double, std::micro>(end - start).count();
+  result.states_evaluated = jointDistribution_.getStateSpaceSize();
+  result.distribution = std::move(distribution);
+
+  return result;
 }
 
 /**

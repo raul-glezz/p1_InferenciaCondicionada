@@ -16,10 +16,12 @@
 
 #pragma once
 
-#include "../distribution/binary_distribution/binary_distribution.h"
 #include <memory>
 #include <chrono>
 #include <vector>
+
+#include "../distribution/binary_distribution/binary_distribution.h"
+#include "../conditional_query/conditional_query.h"
 
 struct InferenceResult {
   //------------------------------------CONSTRUCTOR------------------------------------
@@ -38,7 +40,9 @@ class ConditionalInferenceEngine {
   //-------------------------CONSTRUCTOR-------------------------
   explicit ConditionalInferenceEngine(const BinaryDistribution&);
 
-  //----------------------MÉTODO----------------------
+  //-------------------------MÉTODOS-------------------------
+  /// Método principal para calcular la distribución condicional P(X_I | X_C = c)
+  InferenceResult computeConditional(const ConditionalQuery&);
   /// Método para calcular la distribución condicional P(X_I | X_C = c) usando marginalización
   double* prob_cond_bin(uint64_t, uint64_t, uint64_t);
 
