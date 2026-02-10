@@ -131,9 +131,9 @@ std::unique_ptr<ConditionalQuery> UserInterface::createQuery() {
   int number_interest_variables = readInt("Introduzca el número de variables de interés: ", 1, number_variables - 1);
   
   for (int i = 0; i < number_interest_variables; ++i) {
-    int varIdx = readInt("  Índice de variable (1-" + std::to_string(number_variables) + ")", 1, number_variables) - 1;
+    int variable_index = readInt("  Índice de variable (1-" + std::to_string(number_variables) + ")", 1, number_variables) - 1;
     try {
-      query->addInterestVariable(varIdx);
+      query->addInterestVariable(variable_index);
     } catch (const std::exception& exception) {
       std::cout << "  Error: " << exception.what() << std::endl;
       i--;
@@ -146,14 +146,14 @@ std::unique_ptr<ConditionalQuery> UserInterface::createQuery() {
     int number_conditioned_variables = readInt("Introduzca el número de variables condicionadas: ", 0, maximum_conditioned_variables);
     
     for (int i = 0; i < number_conditioned_variables; ++i) {
-      int varIdx = readInt("  Índice de variable (1-" + std::to_string(number_variables) + ")", 1, number_variables) - 1;
+      int variable_index = readInt("  Índice de variable (1-" + std::to_string(number_variables) + ")", 1, number_variables) - 1;
       int value = readInt("  Valor (0 o 1)", 0, 1);
       
       try {
-          query->addConditionedVariable(varIdx, value);
+        query->addConditionedVariable(variable_index, value);
       } catch (const std::exception& exception) {
-          std::cout << "  Error: " << exception.what() << std::endl;
-          i--;
+        std::cout << "  Error: " << exception.what() << std::endl;
+        i--;
       }
     }
   }
