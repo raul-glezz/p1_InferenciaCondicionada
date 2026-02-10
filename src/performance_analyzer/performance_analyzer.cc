@@ -42,21 +42,28 @@ void PerformanceAnalyzer::runAnalysis(const BinaryDistribution& distribution, in
   int test_count = 0;
   int total_tests = max_interest_variables * max_conditioned_variables * repetitions;
   
+  // Variamos el número de variables de interés
   for (int number_interest = 1; number_interest <= max_interest_variables && number_interest < number_variables; ++number_interest) {
+    // Variamos el número de variables condicionadas
     for (int number_conditioned = 0; number_conditioned <= max_conditioned_variables && (number_interest + number_conditioned) < number_variables; ++number_conditioned) {
+      // Repetimos para promediar
       for (int repetition = 0; repetition < repetitions; ++repetition) {
         test_count++;
         
+        // Creamos una consulta aleatoria
         ConditionalQuery query(number_variables);
         
+        // Seleccionamos las variables aleatorias sin repetición
         std::vector<int> available_variables(number_variables);
         std::iota(available_variables.begin(), available_variables.end(), 0);
         std::shuffle(available_variables.begin(), available_variables.end(), gen);
         
+        // Añadimos las variables de interés
         for (int i = 0; i < number_interest; ++i) {
           query.addInterestVariable(available_variables[i]);
         }
         
+        // Añadimos las variables condicionadas con valores aleatorios
         std::uniform_int_distribution<> dis(0, 1);
         for (int i = 0; i < number_conditioned; ++i) {
           int value = dis(gen);
@@ -65,6 +72,7 @@ void PerformanceAnalyzer::runAnalysis(const BinaryDistribution& distribution, in
         
         query.computeMasks();
         
+        // Ejecutamos la inferencia y medimos los resultados
         auto result = engine.computeConditional(query);
         
         measurements_.emplace_back(
@@ -129,6 +137,7 @@ void PerformanceAnalyzer::displayStatistics() const {
     return;
   }
   
+  // Agrupamos por pares de (variables de interés, variables condicionadas)
   std::map<std::pair<int, int>, std::vector<double>> groups;
   
   for (const auto& measurement : measurements_) {
@@ -147,6 +156,7 @@ void PerformanceAnalyzer::displayStatistics() const {
   
   for (const auto& [key, times] : groups) {
     auto stats = computeStatistics(times);
+    // Asumimos que el número de variables marginalizadas es constante para cada grupo, por lo que tomamos el valor del primer punto de medición
     int marginalized = measurements_[0].number_marginalized_variables;
     
     std::cout << std::setw(10) << key.first
@@ -173,6 +183,7 @@ void PerformanceAnalyzer::generateReport(const std::string& filename) const {
   file << "Mediciones totales: " << measurements_.size() << std::endl;
   file << std::endl;
   
+  // Mostramos estadísticas generales
   std::vector<double> allTimes;
   for (const auto& measurement : measurements_) {
     allTimes.push_back(measurement.execution_time);
@@ -187,7 +198,8 @@ void PerformanceAnalyzer::generateReport(const std::string& filename) const {
   file << "  Desviación estándar:       " << overallStats.standard_deviation << " us" << std::endl;
   file << std::endl;
   
-  file << "Análisis detallado por configuración:\n";
+  // Mostramos estadísticas por configuración
+  file << "Análisis detallado por configuración:" << std::endl;
   file << std::string(80, '-') << std::endl;
   
   std::map<std::pair<int, int>, std::vector<double>> groups;
