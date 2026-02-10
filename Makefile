@@ -29,6 +29,11 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cc
 run: $(BIN)
 	./$(BIN)
 
+visualize:
+	python3 -m venv .venv
+	.venv/bin/pip install -r visualizer/requirements.txt
+	.venv/bin/python3 visualizer/visualize_performance.py output/results.csv
+
 clean:
 	@echo "Limpiando..."
-	@rm -rf $(OBJDIR) $(BIN)
+	@rm -rf $(OBJDIR) $(BIN) .venv
