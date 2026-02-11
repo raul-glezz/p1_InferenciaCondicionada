@@ -24,218 +24,257 @@
 #include "performance_analyzer.h"
 
 /**
- * @brief Método para ejecutar un análisis de rendimiento en una distribución y consulta dadas
- * @param[in] distribution: La distribución binaria sobre la que se realizarán las inferencias
- * @param[in] max_interest_variables: Número máximo de variables de interés a probar en las consultas
- * @param[in] max_conditioned_variables: Número máximo de variables condicionadas a probar en las consultas
- * @param[in] repetitions: Número de repeticiones para cada configuración de consulta
+ * @brief Método para ejecutar un análisis de rendimiento en una distribución y
+ *        consulta dadas
+ * @param[in] distribucion: La distribución binaria sobre la que se realizarán
+ *                          las inferencias
+ * @param[in] max_variables_interes: Número máximo de variables de interés a
+ *                                   probar en las consultas
+ * @param[in] max_variables_condicionadas: Número máximo de variables
+ *                                         condicionadas a probar en las
+ *                                         consultas
+ * @param[in] repeticiones: Número de repeticiones para cada configuración de
+ *                          consulta
  */
-void PerformanceAnalyzer::runAnalysis(const BinaryDistribution& distribution, int max_interest_variables, int max_conditioned_variables, int repetitions) {
+void PerformanceAnalyzer::runAnalysis(const BinaryDistribution& distribucion,
+                                       int max_variables_interes,
+                                       int max_variables_condicionadas,
+                                       int repeticiones) {
   clear();
   
-  int number_variables = distribution.getNumberVariables();
-  ConditionalInferenceEngine engine(distribution);
+  int numero_variables = distribucion.getNumberVariables();
+  ConditionalInferenceEngine motor(distribucion);
   
   std::random_device rd;
   std::mt19937 gen(rd());
   
-  int test_count = 0;
-  int total_tests = max_interest_variables * max_conditioned_variables * repetitions;
+  int cuenta_tests = 0;
+  int total_tests =
+      max_variables_interes * max_variables_condicionadas * repeticiones;
   
-  for (int number_interest = 1; number_interest <= max_interest_variables && number_interest < number_variables; ++number_interest) {
-    for (int number_conditioned = 0; number_conditioned <= max_conditioned_variables && (number_interest + number_conditioned) < number_variables; ++number_conditioned) {
+  for (int numero_interes = 1;
+       numero_interes <= max_variables_interes &&
+       numero_interes < numero_variables;
+       ++numero_interes) {
+    for (int numero_condicionadas = 0;
+         numero_condicionadas <= max_variables_condicionadas &&
+         (numero_interes + numero_condicionadas) < numero_variables;
+         ++numero_condicionadas) {
       // Repetimos para promediar
-      for (int repetition = 0; repetition < repetitions; ++repetition) {
-        test_count++;
+      for (int repeticion = 0; repeticion < repeticiones; ++repeticion) {
+        cuenta_tests++;
         
         // Creamos una consulta aleatoria
-        ConditionalQuery query(number_variables);
+        ConditionalQuery consulta(numero_variables);
         
-        std::vector<int> available_variables(number_variables);
-        std::iota(available_variables.begin(), available_variables.end(), 0);
-        std::shuffle(available_variables.begin(), available_variables.end(), gen);
+        std::vector<int> variables_disponibles(numero_variables);
+        std::iota(variables_disponibles.begin(),
+                  variables_disponibles.end(), 0);
+        std::shuffle(variables_disponibles.begin(),
+                     variables_disponibles.end(), gen);
         
-        for (int i = 0; i < number_interest; ++i) {
-          query.addInterestVariable(available_variables[i]);
+        for (int i = 0; i < numero_interes; ++i) {
+          consulta.addInterestVariable(variables_disponibles[i]);
         }
         
         std::uniform_int_distribution<> dis(0, 1);
-        for (int i = 0; i < number_conditioned; ++i) {
-          int value = dis(gen);
-          query.addConditionedVariable(available_variables[number_interest + i], value);
+        for (int i = 0; i < numero_condicionadas; ++i) {
+          int valor = dis(gen);
+          consulta.addConditionedVariable(
+              variables_disponibles[numero_interes + i], valor);
         }
         
-        query.computeMasks();
+        consulta.computeMasks();
         
         // Ejecutamos la inferencia y medimos los resultados
-        auto result = engine.computeConditional(query);
+        auto resultado = motor.computeConditional(consulta);
         
-        measurements_.emplace_back(
-          number_interest,
-          number_conditioned,
-          query.getNumberMarginalizedVariables(),
-          result.execution_time,
-          result.states_evaluated
-        );
+        mediciones_.emplace_back(
+            numero_interes, numero_condicionadas,
+            consulta.getNumberMarginalizedVariables(),
+            resultado.tiempo_ejecucion, resultado.estados_evaluados);
       }
     }
   }
 }
 
 /**
- * @brief Método para agregar un nuevo punto de medición de rendimiento a la lista de mediciones
- * @param[in] distribution: La distribución binaria sobre la que se realizará la inferencia
- * @param[in] query: La consulta condicional para la cual se medirá el rendimiento
+ * @brief Método para agregar un nuevo punto de medición de rendimiento a la
+ *        lista de mediciones
+ * @param[in] distribucion: La distribución binaria sobre la que se realizará la
+ *                          inferencia
+ * @param[in] consulta: La consulta condicional para la cual se medirá el
+ *                      rendimiento
  */
-void PerformanceAnalyzer::addMeasurement(const BinaryDistribution& distribution, const ConditionalQuery& query) {
-  ConditionalInferenceEngine engine(distribution);
-  auto result = engine.computeConditional(query);
+void PerformanceAnalyzer::addMeasurement(
+    const BinaryDistribution& distribucion,
+    const ConditionalQuery& consulta) {
+  ConditionalInferenceEngine motor(distribucion);
+  auto resultado = motor.computeConditional(consulta);
   
-  measurements_.emplace_back(
-    query.getNumberInterestVariables(),
-    query.getNumberConditionedVariables(),
-    query.getNumberMarginalizedVariables(),
-    result.execution_time,
-    result.states_evaluated
-  );
+  mediciones_.emplace_back(consulta.getNumberInterestVariables(),
+                          consulta.getNumberConditionedVariables(),
+                          consulta.getNumberMarginalizedVariables(),
+                          resultado.tiempo_ejecucion,
+                          resultado.estados_evaluados);
 }
 
 /**
- * @brief Método para exportar los puntos de medición de rendimiento a un archivo CSV
- * @param[in] filename: El nombre del archivo CSV donde se exportarán los datos
+ * @brief Método para exportar los puntos de medición de rendimiento a un
+ *        archivo CSV
+ * @param[in] nombre_archivo: El nombre del archivo CSV donde se exportarán los
+ *                            datos
  */
-void PerformanceAnalyzer::exportToCSV(const std::string& filename) const {
-  std::ofstream file(filename);
-  if (!file.is_open()) {
-    throw std::runtime_error("Error: No se pudo abrir el archivo para escritura " + filename);
+void PerformanceAnalyzer::exportToCSV(
+    const std::string& nombre_archivo) const {
+  std::ofstream archivo(nombre_archivo);
+  if (!archivo.is_open()) {
+    throw std::runtime_error(
+        "Error: No se pudo abrir el archivo para escritura " +
+        nombre_archivo);
   }
   
-  file << "VariablesInteres,VariablesCondicionadas,VariablesMarginalizadas,TiempoEjecucion(us),EstadosEvaluados\n";
+  archivo << "VariablesInteres,VariablesCondicionadas,"
+             "VariablesMarginalizadas,TiempoEjecucion(us),EstadosEvaluados\n";
   
-  for (const auto& point : measurements_) {
-    file << point.number_interest_variables << ","
-         << point.number_conditioned_variables << ","
-         << point.number_marginalized_variables << ","
-         << std::fixed << std::setprecision(2) << point.execution_time << ","
-         << point.states_evaluated << "\n";
+  for (const auto& punto : mediciones_) {
+    archivo << punto.numero_variables_interes << ","
+            << punto.numero_variables_condicionadas << ","
+            << punto.numero_variables_marginalizadas << "," << std::fixed
+            << std::setprecision(2) << punto.tiempo_ejecucion << ","
+            << punto.estados_evaluados << "\n";
   }
   
-  file.close();
+  archivo.close();
 }
 
 /**
- * @brief Método para mostrar estadísticas básicas de los puntos de medición de rendimiento almacenados
+ * @brief Método para mostrar estadísticas básicas de los puntos de medición de
+ *        rendimiento almacenados
  */
 void PerformanceAnalyzer::displayStatistics() const {
-  if (measurements_.empty()) {
+  if (mediciones_.empty()) {
     std::cout << "No hay mediciones disponibles." << std::endl;
     return;
   }
   
-  std::map<std::pair<int, int>, std::vector<double>> groups;
+  std::map<std::pair<int, int>, std::vector<double>> grupos;
   
-  for (const auto& measurement : measurements_) {
-    groups[{measurement.number_interest_variables, measurement.number_conditioned_variables}].push_back(measurement.execution_time);
+  for (const auto& medicion : mediciones_) {
+    grupos[{medicion.numero_variables_interes,
+            medicion.numero_variables_condicionadas}]
+        .push_back(medicion.tiempo_ejecucion);
   }
   
-  std::cout << std::setw(12) << "Interés" 
-            << std::setw(14) << "Condicionado"
-            << std::setw(12) << "Marginal"
-            << std::setw(15) << "Media(us)"
-            << std::setw(15) << "Mín(us)"
-            << std::setw(15) << "Máx(us)"
-            << std::setw(15) << "DesvEst(us)"
-            << std::endl;
+  std::cout << std::setw(12) << "Interés" << std::setw(14) << "Condicionado"
+            << std::setw(12) << "Marginal" << std::setw(15) << "Media(us)"
+            << std::setw(15) << "Mín(us)" << std::setw(15) << "Máx(us)"
+            << std::setw(15) << "DesvEst(us)" << std::endl;
   std::cout << std::string(90, '-') << std::endl;
   
-  for (const auto& [key, times] : groups) {
-    auto stats = computeStatistics(times);
-    int marginalized = measurements_[0].number_marginalized_variables;
+  for (const auto& [clave, tiempos] : grupos) {
+    auto estadisticas = computeStatistics(tiempos);
+    int marginalizadas = mediciones_[0].numero_variables_marginalizadas;
     
-    std::cout << std::setw(10) << key.first
-              << std::setw(12) << key.second
-              << std::setw(12) << marginalized
-              << std::setw(15) << std::fixed << std::setprecision(2) << stats.mean
-              << std::setw(15) << stats.minimum
-              << std::setw(15) << stats.maximum
-              << std::setw(15) << stats.standard_deviation
-              << std::endl;
+    std::cout << std::setw(10) << clave.first << std::setw(12)
+              << clave.second << std::setw(12) << marginalizadas
+              << std::setw(15) << std::fixed << std::setprecision(2)
+              << estadisticas.media << std::setw(15) << estadisticas.minimo
+              << std::setw(15) << estadisticas.maximo << std::setw(15)
+              << estadisticas.desviacion_estandar << std::endl;
   }
 }
 
 /**
- * @brief Método para generar un informe detallado de los puntos de medición de rendimiento almacenados
- * @param[in] filename: El nombre del archivo donde se guardará el informe
+ * @brief Método para generar un informe detallado de los puntos de medición de
+ *        rendimiento almacenados
+ * @param[in] nombre_archivo: El nombre del archivo donde se guardará el informe
  */
-void PerformanceAnalyzer::generateReport(const std::string& filename) const {
-  std::ofstream file(filename);
-  if (!file.is_open()) {
-    throw std::runtime_error("Error: No se pudo abrir el archivo para escritura " + filename);
+void PerformanceAnalyzer::generateReport(
+    const std::string& nombre_archivo) const {
+  std::ofstream archivo(nombre_archivo);
+  if (!archivo.is_open()) {
+    throw std::runtime_error(
+        "Error: No se pudo abrir el archivo para escritura " +
+        nombre_archivo);
   }
   
-  file << "Mediciones totales: " << measurements_.size() << std::endl;
-  file << std::endl;
+  archivo << "Mediciones totales: " << mediciones_.size() << std::endl;
+  archivo << std::endl;
   
   // Mostramos estadísticas generales
-  std::vector<double> allTimes;
-  for (const auto& measurement : measurements_) {
-    allTimes.push_back(measurement.execution_time);
+  std::vector<double> todos_tiempos;
+  for (const auto& medicion : mediciones_) {
+    todos_tiempos.push_back(medicion.tiempo_ejecucion);
   }
   
-  auto overallStats = computeStatistics(allTimes);
+  auto estadisticas_generales = computeStatistics(todos_tiempos);
   
-  file << "Estadísticas generales:\n";
-  file << "  Tiempo medio de ejecución: " << overallStats.mean << " us" << std::endl;
-  file << "  Tiempo mínimo de ejecución:  " << overallStats.minimum << " us" << std::endl;
-  file << "  Tiempo máximo de ejecución:  " << overallStats.maximum << " us" << std::endl;
-  file << "  Desviación estándar:       " << overallStats.standard_deviation << " us" << std::endl;
-  file << std::endl;
+  archivo << "Estadísticas generales:\n";
+  archivo << "  Tiempo medio de ejecución: " << estadisticas_generales.media
+          << " us" << std::endl;
+  archivo << "  Tiempo mínimo de ejecución:  " << estadisticas_generales.minimo
+          << " us" << std::endl;
+  archivo << "  Tiempo máximo de ejecución:  " << estadisticas_generales.maximo
+          << " us" << std::endl;
+  archivo << "  Desviación estándar:       "
+          << estadisticas_generales.desviacion_estandar << " us" << std::endl;
+  archivo << std::endl;
   
-  file << "Análisis detallado por configuración:" << std::endl;
-  file << std::string(80, '-') << std::endl;
+  archivo << "Análisis detallado por configuración:" << std::endl;
+  archivo << std::string(80, '-') << std::endl;
   
-  std::map<std::pair<int, int>, std::vector<double>> groups;
-  for (const auto& measurement : measurements_) {
-    groups[{measurement.number_interest_variables, measurement.number_conditioned_variables}].push_back(measurement.execution_time);
+  std::map<std::pair<int, int>, std::vector<double>> grupos;
+  for (const auto& medicion : mediciones_) {
+    grupos[{medicion.numero_variables_interes,
+            medicion.numero_variables_condicionadas}]
+        .push_back(medicion.tiempo_ejecucion);
   }
   
-  for (const auto& [key, times] : groups) {
-    auto stats = computeStatistics(times);
-    file << "\nVariables de interés: " << key.first 
-          << ", Variables condicionadas: " << key.second << std::endl;
-    file << "  Muestras: " << times.size() << std::endl;
-    file << "  Media: " << stats.mean << " us" << std::endl;
-    file << "  Mín:  " << stats.minimum << " us" << std::endl;
-    file << "  Máx:  " << stats.maximum << " us" << std::endl;
-    file << "  DesvEst: " << stats.standard_deviation << " us" << std::endl;
+  for (const auto& [clave, tiempos] : grupos) {
+    auto estadisticas = computeStatistics(tiempos);
+    archivo << "\nVariables de interés: " << clave.first
+            << ", Variables condicionadas: " << clave.second << std::endl;
+    archivo << "  Muestras: " << tiempos.size() << std::endl;
+    archivo << "  Media: " << estadisticas.media << " us" << std::endl;
+    archivo << "  Mín:  " << estadisticas.minimo << " us" << std::endl;
+    archivo << "  Máx:  " << estadisticas.maximo << " us" << std::endl;
+    archivo << "  DesvEst: " << estadisticas.desviacion_estandar << " us"
+            << std::endl;
   }
   
-  file.close();
+  archivo.close();
 }
 
 /**
- * @brief Método para calcular estadísticas básicas (media, mínimo, máximo, desviación estándar)
- * @param[in] values: Un vector de valores numéricos para los cuales se calcularán las estadísticas
- * @return Una estructura Statistics que contiene la media, mínimo, máximo y desviación estándar de los valores
+ * @brief Método para calcular estadísticas básicas (media, mínimo, máximo,
+ *        desviación estándar)
+ * @param[in] valores: Un vector de valores numéricos para los cuales se
+ *                     calcularán las estadísticas
+ * @return Una estructura Statistics que contiene la media, mínimo, máximo y
+ *         desviación estándar de los valores
  */
-Statistics PerformanceAnalyzer::computeStatistics(const std::vector<double>& values) const {
-  Statistics stats;
+Statistics PerformanceAnalyzer::computeStatistics(
+    const std::vector<double>& valores) const {
+  Statistics estadisticas;
   
-  if (values.empty()) {
-    stats.mean = stats.minimum = stats.maximum = stats.standard_deviation = 0.0;
-    return stats;
+  if (valores.empty()) {
+    estadisticas.media = estadisticas.minimo = estadisticas.maximo =
+        estadisticas.desviacion_estandar = 0.0;
+    return estadisticas;
   }
   
-  stats.mean = std::accumulate(values.begin(), values.end(), 0.0) / values.size();
-  stats.minimum = *std::min_element(values.begin(), values.end());
-  stats.maximum = *std::max_element(values.begin(), values.end());
+  estadisticas.media =
+      std::accumulate(valores.begin(), valores.end(), 0.0) / valores.size();
+  estadisticas.minimo = *std::min_element(valores.begin(), valores.end());
+  estadisticas.maximo = *std::max_element(valores.begin(), valores.end());
   
-  double variance = 0.0;
-  for (double v : values) {
-    variance += (v - stats.mean) * (v - stats.mean);
+  double varianza = 0.0;
+  for (double v : valores) {
+    varianza += (v - estadisticas.media) * (v - estadisticas.media);
   }
-  variance /= values.size();
-  stats.standard_deviation = std::sqrt(variance);
+  varianza /= valores.size();
+  estadisticas.desviacion_estandar = std::sqrt(varianza);
   
-  return stats;
+  return estadisticas;
 }

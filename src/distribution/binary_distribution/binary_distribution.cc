@@ -24,89 +24,98 @@
 #include "binary_distribution.h"
 
 /**
- * @brief Constructor que inicializa la distribución con un número dado de variables
- * @param[in] number_variables: Número de variables binarias (N)
- * @throws std::invalid_argument si el número de variables es menor o igual a 0 o mayor a 64
+ * @brief Constructor que inicializa la distribución con un número dado de
+ *        variables
+ * @param[in] numero_variables: Número de variables binarias (N)
+ * @throws std::invalid_argument si el número de variables es menor o igual a 0
+ *         o mayor a 64
  */
-BinaryDistribution::BinaryDistribution(int number_variables) : number_variables_(number_variables) {
-  if (number_variables <= 0 || number_variables > 64) {
-    throw std::invalid_argument("Error: El número de variables debe estar entre 1 y 64");
+BinaryDistribution::BinaryDistribution(int numero_variables)
+    : numero_variables_(numero_variables) {
+  if (numero_variables <= 0 || numero_variables > 64) {
+    throw std::invalid_argument(
+        "Error: El número de variables debe estar entre 1 y 64");
   }
     
-  state_space_size_ = 1ULL << number_variables_;
-  probabilities_.resize(state_space_size_, 0.0);
+  tamano_espacio_estados_ = 1ULL << numero_variables_;
+  probabilidades_.resize(tamano_espacio_estados_, 0.0);
 }
 
 /**
  * @brief Constructor que carga la distribución desde un archivo CSV
- * @param[in] filename: Ruta del archivo CSV
- * @throws std::runtime_error si hay errores al leer el archivo o al parsear su contenido
+ * @param[in] nombre_archivo: Ruta del archivo CSV
+ * @throws std::runtime_error si hay errores al leer el archivo o al parsear
+ *         su contenido
  */
-BinaryDistribution::BinaryDistribution(const std::string& filename) {
-  loadFromCSV(filename);
+BinaryDistribution::BinaryDistribution(const std::string& nombre_archivo) {
+  loadFromCSV(nombre_archivo);
 }
 
 /**
  * @brief Método para obtener la probabilidad de una configuración específica
- * @param[in] index: Índice de la configuración (codificación binaria)
+ * @param[in] indice: Índice de la configuración (codificación binaria)
  * @return Probabilidad asociada a la configuración dada por el índice
  * @throws std::out_of_range si el índice está fuera del rango válido
  */
-double BinaryDistribution::getProbability(uint64_t index) const {
-  if (index >= state_space_size_) {
+double BinaryDistribution::getProbability(uint64_t indice) const {
+  if (indice >= tamano_espacio_estados_) {
     throw std::out_of_range("Error: Índice fuera de rango");
   }
-  return probabilities_[index];
+  return probabilidades_[indice];
 }
 
 /**
  * @brief Método para establecer la probabilidad de una configuración específica
- * @param[in] index: Índice de la configuración (codificación binaria)
- * @param[in] probability: Probabilidad a asignar
+ * @param[in] indice: Índice de la configuración (codificación binaria)
+ * @param[in] probabilidad: Probabilidad a asignar
  * @throws std::out_of_range si el índice está fuera del rango válido
  * @throws std::invalid_argument si la probabilidad no está en el rango [0, 1]
  */
-void BinaryDistribution::setProbability(uint64_t index, double probability) {
-  if (index >= state_space_size_) {
+void BinaryDistribution::setProbability(uint64_t indice, double probabilidad) {
+  if (indice >= tamano_espacio_estados_) {
     throw std::out_of_range("Error: Índice fuera de rango");
   }
-  if (probability < 0.0 || probability > 1.0) {
-    throw std::invalid_argument("Error: La probabilidad debe estar entre 0 y 1");
+  if (probabilidad < 0.0 || probabilidad > 1.0) {
+    throw std::invalid_argument(
+        "Error: La probabilidad debe estar entre 0 y 1");
   }
-  probabilities_[index] = probability;
+  probabilidades_[indice] = probabilidad;
 }
 
 /**
  * @brief Método para validar que la distribución esté correctamente normalizada
- * @return true si la suma de las probabilidades es 1 (dentro de una tolerancia), false en caso contrario
+ * @return true si la suma de las probabilidades es 1 (dentro de una tolerancia),
+ *         false en caso contrario
  */
 bool BinaryDistribution::isValid() const {
-  double sum = 0.0;
-  for (double probability : probabilities_) {
-    if (probability < -EPSILON || probability > 1.0 + EPSILON) {
+  double suma = 0.0;
+  for (double probabilidad : probabilidades_) {
+    if (probabilidad < -EPSILON || probabilidad > 1.0 + EPSILON) {
       return false;
     }
-    sum += probability;
+    suma += probabilidad;
   }
-  return std::abs(sum - 1.0) < EPSILON;
+  return std::abs(suma - 1.0) < EPSILON;
 }
 
 /**
  * @brief Método para normalizar la distribución
- * @throws std::runtime_error si la suma de las probabilidades es cero (no se puede normalizar)
+ * @throws std::runtime_error si la suma de las probabilidades es cero
+ *         (no se puede normalizar)
  */
 void BinaryDistribution::normalize() {
-  double sum = 0.0;
-  for (double probability : probabilities_) {
-    sum += probability;
+  double suma = 0.0;
+  for (double probabilidad : probabilidades_) {
+    suma += probabilidad;
   }
   
-  if (sum < EPSILON) {
-    throw std::runtime_error("Error: No se puede normalizar, la suma de probabilidades es cero");
+  if (suma < EPSILON) {
+    throw std::runtime_error(
+        "Error: No se puede normalizar, la suma de probabilidades es cero");
   }
   
-  for (double& probability : probabilities_) {
-    probability /= sum;
+  for (double& probabilidad : probabilidades_) {
+    probabilidad /= suma;
   }
 }
 
@@ -114,46 +123,55 @@ void BinaryDistribution::normalize() {
  * @brief Método para mostrar la distribución en consola
  */
 void BinaryDistribution::display() const {
-  std::cout << "=== Distribución Binaria (N=" << number_variables_ << ") ===" << std::endl;
+  std::cout << "=== Distribución Binaria (N=" << numero_variables_ << ") ==="
+            << std::endl;
   std::cout << std::fixed << std::setprecision(6);
   
   std::cout << "Config   |";
-  for (int i = number_variables_ - 1; i >= 0; i--) {
+  for (int i = numero_variables_ - 1; i >= 0; i--) {
     std::cout << " X" << (i + 1);
   }
   std::cout << " | Probabilidad" << std::endl;
-  std::cout << std::string(10 + number_variables_ * 3 + 15, '-') << std::endl;
+  std::cout << std::string(10 + numero_variables_ * 3 + 15, '-')
+            << std::endl;
   
-  for (uint64_t i = 0; i < state_space_size_; ++i) {
-    if (probabilities_[i] > EPSILON) {
-      std::string binary = indexToBinary(i);
-      std::cout << std::setw(8) << binary << " |";
-      for (char bit : binary) { std::cout << "  " << bit; }
-      std::cout << " | " << std::setw(10) << probabilities_[i] << std::endl;
+  for (uint64_t i = 0; i < tamano_espacio_estados_; ++i) {
+    if (probabilidades_[i] > EPSILON) {
+      std::string binario = indexToBinary(i);
+      std::cout << std::setw(8) << binario << " |";
+      for (char bit : binario) {
+        std::cout << "  " << bit;
+      }
+      std::cout << " | " << std::setw(10) << probabilidades_[i] << std::endl;
     }
   }
   std::cout << std::endl;
 
-  std::cout << "Suma total de probabilidades: " << std::accumulate(probabilities_.begin(), probabilities_.end(), 0.0) << std::endl;
+  std::cout << "Suma total de probabilidades: "
+            << std::accumulate(probabilidades_.begin(), probabilidades_.end(),
+                               0.0)
+            << std::endl;
 }
 
 /**
  * @brief Método para exportar la distribución a un archivo CSV
- * @param[in] filename: Ruta del archivo CSV de salida
+ * @param[in] nombre_archivo: Ruta del archivo CSV de salida
  * @throws std::runtime_error si no se puede abrir el archivo
  */
-void BinaryDistribution::exportToCSV(const std::string& filename) const {
-  std::ofstream file(filename);
-  if (!file.is_open()) {
-    throw std::runtime_error("Error: No se puede abrir el archivo " + filename);
+void BinaryDistribution::exportToCSV(
+    const std::string& nombre_archivo) const {
+  std::ofstream archivo(nombre_archivo);
+  if (!archivo.is_open()) {
+    throw std::runtime_error("Error: No se puede abrir el archivo " +
+                             nombre_archivo);
   }
   
-  file << std::fixed << std::setprecision(10);
-  for (uint64_t i = 0; i < state_space_size_; ++i) {
-    file << indexToBinary(i) << "," << probabilities_[i] << std::endl;
+  archivo << std::fixed << std::setprecision(10);
+  for (uint64_t i = 0; i < tamano_espacio_estados_; ++i) {
+    archivo << indexToBinary(i) << "," << probabilidades_[i] << std::endl;
   }
   
-  file.close();
+  archivo.close();
 }
 
 /**
@@ -164,86 +182,89 @@ void BinaryDistribution::generateRandom() {
   std::mt19937 gen(rd());
   std::uniform_real_distribution<> dis(0.1, 10.0);
   
-  for (uint64_t i = 0; i < state_space_size_; i++) {
-    probabilities_[i] = dis(gen);
+  for (uint64_t i = 0; i < tamano_espacio_estados_; i++) {
+    probabilidades_[i] = dis(gen);
   }
   normalize();
 }
 
 /**
  * @brief Método para convertir un índice numérico a su representación binaria
- * @param[in] index: Índice numérico a convertir
- * @return Cadena de texto con la representación binaria del índice, con ceros a la izquierda
+ * @param[in] indice: Índice numérico a convertir
+ * @return Cadena de texto con la representación binaria del índice, con ceros
+ *         a la izquierda
  */
-std::string BinaryDistribution::indexToBinary(uint64_t index) const {
-  std::string binary;
-  binary.reserve(number_variables_);
+std::string BinaryDistribution::indexToBinary(uint64_t indice) const {
+  std::string binario;
+  binario.reserve(numero_variables_);
   
-  for (int i = 0; i < number_variables_; ++i) {
-    binary = std::string(1, (index & 1 ? '1' : '0')) + binary;
-    index >>= 1;
+  for (int i = 0; i < numero_variables_; ++i) {
+    binario = std::string(1, (indice & 1 ? '1' : '0')) + binario;
+    indice >>= 1;
   }
   
-  return binary;
+  return binario;
 }
 
 /**
  * @brief Método que carga la distribución desde un archivo CSV
- * @param[in] filename: Ruta del archivo CSV
- * @throws std::runtime_error si hay errores al leer el archivo o al parsear su contenido
+ * @param[in] nombre_archivo: Ruta del archivo CSV
+ * @throws std::runtime_error si hay errores al leer el archivo o al parsear
+ *         su contenido
  */
-void BinaryDistribution::loadFromCSV(const std::string& filename) {
-  std::ifstream file(filename);
-  if (!file.is_open()) {
-    throw std::runtime_error("No se puede abrir el archivo: " + filename);
+void BinaryDistribution::loadFromCSV(const std::string& nombre_archivo) {
+  std::ifstream archivo(nombre_archivo);
+  if (!archivo.is_open()) {
+    throw std::runtime_error("No se puede abrir el archivo: " +
+                             nombre_archivo);
   }
   
-  std::string line;
-  std::vector<std::pair<std::string, double>> data;
+  std::string linea;
+  std::vector<std::pair<std::string, double>> datos;
   
-  while (std::getline(file, line)) {
-    if (line.empty()) continue;
+  while (std::getline(archivo, linea)) {
+    if (linea.empty()) continue;
     
-    size_t commaPos = line.find(',');
-    if (commaPos == std::string::npos) {
-      throw std::runtime_error("Formato CSV inválido: " + line);
+    size_t posicion_coma = linea.find(',');
+    if (posicion_coma == std::string::npos) {
+      throw std::runtime_error("Formato CSV inválido: " + linea);
     }
     
-    std::string binary = line.substr(0, commaPos);
-    double probability = std::stod(line.substr(commaPos + 1));
+    std::string binario = linea.substr(0, posicion_coma);
+    double probabilidad = std::stod(linea.substr(posicion_coma + 1));
     
-    data.push_back({binary, probability});
+    datos.push_back({binario, probabilidad});
   }
   
-  file.close();
+  archivo.close();
   
-  if (data.empty()) {
+  if (datos.empty()) {
     throw std::runtime_error("Archivo CSV vacío");
   }
   
-  number_variables_ = data[0].first.length();
-  state_space_size_ = 1ULL << number_variables_;
-  probabilities_.resize(state_space_size_, 0.0);
+  numero_variables_ = datos[0].first.length();
+  tamano_espacio_estados_ = 1ULL << numero_variables_;
+  probabilidades_.resize(tamano_espacio_estados_, 0.0);
   
-  for (const auto& [binary, probability] : data) {
-    if (binary.length() != static_cast<size_t>(number_variables_)) {
+  for (const auto& [binario, probabilidad] : datos) {
+    if (binario.length() != static_cast<size_t>(numero_variables_)) {
       throw std::runtime_error("Longitud de máscara inconsistente en CSV");
     }
     
-    uint64_t index = binaryToIndex(binary);
-    probabilities_[index] = probability;
+    uint64_t indice = binaryToIndex(binario);
+    probabilidades_[indice] = probabilidad;
   }
 }
 
 /**
  * @brief Método que convierte la máscara binaria a su índice numérico
- * @param[in] binary: Cadena de texto con la representación binaria
+ * @param[in] binario: Cadena de texto con la representación binaria
  * @return Índice numérico correspondiente a la máscara binaria
  */
-uint64_t BinaryDistribution::binaryToIndex(const std::string& binary) const {
-  uint64_t index = 0;
-  for (char bit : binary) {
-    index = (index << 1) | (bit == '1' ? 1 : 0);
+uint64_t BinaryDistribution::binaryToIndex(const std::string& binario) const {
+  uint64_t indice = 0;
+  for (char bit : binario) {
+    indice = (indice << 1) | (bit == '1' ? 1 : 0);
   }
-  return index;
+  return indice;
 }

@@ -28,9 +28,13 @@ class BinaryDistribution : public IDistribution {
  public:
   explicit BinaryDistribution(int);
   explicit BinaryDistribution(const std::string&);
-  int getNumberVariables() const override { return number_variables_; }
-  const std::vector<double>& getProbabilities() const { return probabilities_; }
-  uint64_t getStateSpaceSize() const override { return state_space_size_; }
+  int getNumberVariables() const override { return numero_variables_; }
+  const std::vector<double>& getProbabilities() const {
+    return probabilidades_;
+  }
+  uint64_t getStateSpaceSize() const override {
+    return tamano_espacio_estados_;
+  }
   double getProbability(uint64_t) const override;
   void setProbability(uint64_t, double) override;
   void normalize() override;
@@ -41,9 +45,9 @@ class BinaryDistribution : public IDistribution {
   void exportToCSV(const std::string&) const override;
     
  private:
-  int number_variables_;
-  std::vector<double> probabilities_;
-  uint64_t state_space_size_;
+  int numero_variables_;
+  std::vector<double> probabilidades_;
+  uint64_t tamano_espacio_estados_;
 
   void loadFromCSV(const std::string&);
   uint64_t binaryToIndex(const std::string&) const;

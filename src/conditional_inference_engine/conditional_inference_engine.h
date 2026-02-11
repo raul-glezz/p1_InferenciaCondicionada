@@ -24,15 +24,17 @@
 #include "../conditional_query/conditional_query.h"
 
 struct InferenceResult {
-  //------------------------------------CONSTRUCTOR------------------------------------
-  InferenceResult() : distribution(nullptr), execution_time(0.0), states_evaluated(0) {}
+  //-----------------------------------CONSTRUCTOR----------------------------------
+  InferenceResult() : distribucion(nullptr), tiempo_ejecucion(0.0),
+                      estados_evaluados(0) {}
   
-  /// distribution: Distribución condicional resultante
-  std::unique_ptr<BinaryDistribution> distribution;
-  /// execution_time: Tiempo de ejecución del proceso de inferencia en segundos
-  double execution_time;
-  /// states_evaluated: Número de estados evaluados durante la inferencia
-  uint64_t states_evaluated;
+  /// distribucion: Distribución condicional resultante
+  std::unique_ptr<BinaryDistribution> distribucion;
+  /// tiempo_ejecucion: Tiempo de ejecución del proceso de inferencia
+  ///                   en microsegundos
+  double tiempo_ejecucion;
+  /// estados_evaluados: Número de estados evaluados durante la inferencia
+  uint64_t estados_evaluados;
 };
 
 class ConditionalInferenceEngine {
@@ -57,6 +59,7 @@ class ConditionalInferenceEngine {
 
  private:
   //-----------------ATRIBUTO-----------------
-  /// jointDistribution_: Referencia a la distribución conjunta sobre la que se realizarán las inferencias
-  const BinaryDistribution& jointDistribution_;
+  /// distribucion_conjunta_: Referencia a la distribución conjunta sobre la
+  ///                         que se realizarán las inferencias
+  const BinaryDistribution& distribucion_conjunta_;
 };

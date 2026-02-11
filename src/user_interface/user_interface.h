@@ -25,20 +25,21 @@
 
 class UserInterface {
  public:
-  //-----------------------------CONSTRUCTOR-----------------------------
-  UserInterface() : analyzer_(std::make_unique<PerformanceAnalyzer>()) {}
+  //------------------------------CONSTRUCTOR-------------------------------
+  UserInterface() : analizador_(std::make_unique<PerformanceAnalyzer>()) {}
   
   /// Método principal para ejecutar la interfaz de usuario
   void run();
     
  private:
   //--------------------ATRIBUTOS--------------------
-  /// distribution_: Distribución conjunta binaria cargada o generada
-  std::unique_ptr<BinaryDistribution> distribution_;
-  /// engine_: Motor de inferencia condicional para realizar cálculos
-  std::unique_ptr<ConditionalInferenceEngine> engine_;
-  /// analyzer_: Analizador de rendimiento para evaluar el motor de inferencia
-  std::unique_ptr<PerformanceAnalyzer> analyzer_;
+  /// distribucion_: Distribución conjunta binaria cargada o generada
+  std::unique_ptr<BinaryDistribution> distribucion_;
+  /// motor_: Motor de inferencia condicional para realizar cálculos
+  std::unique_ptr<ConditionalInferenceEngine> motor_;
+  /// analizador_: Analizador de rendimiento para evaluar el motor de
+  ///              inferencia
+  std::unique_ptr<PerformanceAnalyzer> analizador_;
   
   //---------------MÉTODOS PRIVADOS---------------
   /// Métodos para mostrar el menú principal

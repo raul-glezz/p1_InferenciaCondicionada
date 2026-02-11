@@ -26,48 +26,53 @@
  * @brief Estructura para almacenar un punto de medición de rendimiento
  */
 struct PerformanceDataPoint {
-  int number_interest_variables;
-  int number_conditioned_variables;
-  int number_marginalized_variables;
-  double execution_time;
-  uint64_t states_evaluated;
+  int numero_variables_interes;
+  int numero_variables_condicionadas;
+  int numero_variables_marginalizadas;
+  double tiempo_ejecucion;
+  uint64_t estados_evaluados;
   
-  PerformanceDataPoint(int interest, int conditioned, int marginalized, double execution_time, uint64_t states_evaluated) : 
-    number_interest_variables(interest), 
-    number_conditioned_variables(conditioned),
-    number_marginalized_variables(marginalized), 
-    execution_time(execution_time),
-    states_evaluated(states_evaluated) {}
+  PerformanceDataPoint(int interes, int condicionadas, int marginalizadas,
+                       double tiempo, uint64_t estados)
+      : numero_variables_interes(interes),
+        numero_variables_condicionadas(condicionadas),
+        numero_variables_marginalizadas(marginalizadas),
+        tiempo_ejecucion(tiempo),
+        estados_evaluados(estados) {}
 };
 
 /**
- * @brief Estructura para almacenar estadísticas básicas de un conjunto de mediciones
+ * @brief Estructura para almacenar estadísticas básicas de un conjunto de
+ *        mediciones
  */
 struct Statistics {
-  double mean;
-  double minimum;
-  double maximum;
-  double standard_deviation;
+  double media;
+  double minimo;
+  double maximo;
+  double desviacion_estandar;
 };
 
 /**
- * @brief Clase para analizar el rendimiento del motor de inferencia condicional bajo diferentes configuraciones de consultas
+ * @brief Clase para analizar el rendimiento del motor de inferencia
+ *        condicional bajo diferentes configuraciones de consultas
  */
 class PerformanceAnalyzer {
  public:
   void runAnalysis(const BinaryDistribution&, int, int, int = 5);
   
-  const std::vector<PerformanceDataPoint>& getMeasurements() const { return measurements_; }
+  const std::vector<PerformanceDataPoint>& getMeasurements() const {
+    return mediciones_;
+  }
   void addMeasurement(const BinaryDistribution&, const ConditionalQuery&);
 
   void exportToCSV(const std::string&) const;
   void displayStatistics() const;
   void generateReport(const std::string&) const;
 
-  void clear() { measurements_.clear(); }
+  void clear() { mediciones_.clear(); }
 
  private:
-  std::vector<PerformanceDataPoint> measurements_;
+  std::vector<PerformanceDataPoint> mediciones_;
 
   Statistics computeStatistics(const std::vector<double>&) const;
 };

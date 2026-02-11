@@ -21,112 +21,131 @@
 
 /**
  * @brief Constructor del motor de inferencia
- * @param[in] joint_distribution: Distribución conjunta sobre la que realizar inferencias
+ * @param[in] distribucion_conjunta: Distribución conjunta sobre la que realizar
+ *                                   inferencias
  */
-ConditionalInferenceEngine::ConditionalInferenceEngine(const BinaryDistribution& joint_distribution) : 
-  jointDistribution_(joint_distribution) {}
+ConditionalInferenceEngine::ConditionalInferenceEngine(
+    const BinaryDistribution& distribucion_conjunta)
+    : distribucion_conjunta_(distribucion_conjunta) {}
 
 /**
- * @brief Método para calcular la distribución condicional P(X_I | X_C = c) usando marginalización
+ * @brief Método para calcular la distribución condicional P(X_I | X_C = c)
+ *        usando marginalización
  * @param[in] maskC: Máscara de variables condicionadas
  * @param[in] valC: Valores de variables condicionadas
  * @param[in] maskI: Máscara de variables de interés
  * @return Array con probabilidades condicionales
  */
-double* ConditionalInferenceEngine::prob_cond_bin(uint64_t maskC, uint64_t valC, uint64_t maskI) {
-  int number_interest_bits = countBits(maskI);
-  uint64_t interest_states = 1ULL << number_interest_bits;
+double* ConditionalInferenceEngine::prob_cond_bin(uint64_t maskC,
+                                                   uint64_t valC,
+                                                   uint64_t maskI) {
+  int numero_bits_interes = countBits(maskI);
+  uint64_t estados_interes = 1ULL << numero_bits_interes;
 
-  double* output = new double[interest_states];
-  std::memset(output, 0, interest_states * sizeof(double));
+  double* salida = new double[estados_interes];
+  std::memset(salida, 0, estados_interes * sizeof(double));
 
-  uint64_t total_states = jointDistribution_.getStateSpaceSize();
-  for (uint64_t state = 0; state < total_states; ++state) {
-    if (isConsistent(state, maskC, valC)) {
-      uint64_t interest_idx = extractInterestBits(state, maskI);
-      output[interest_idx] += jointDistribution_.getProbability(state);
+  uint64_t total_estados = distribucion_conjunta_.getStateSpaceSize();
+  for (uint64_t estado = 0; estado < total_estados; ++estado) {
+    if (isConsistent(estado, maskC, valC)) {
+      uint64_t indice_interes = extractInterestBits(estado, maskI);
+      salida[indice_interes] += distribucion_conjunta_.getProbability(estado);
     }
   }
 
-  double sum = 0.0;
-  for (uint64_t i = 0; i < interest_states; ++i) { sum += output[i]; }
-  if (sum > 1e-10) {
-    for (uint64_t i = 0; i < interest_states; ++i) {
-      output[i] /= sum;
+  double suma = 0.0;
+  for (uint64_t i = 0; i < estados_interes; ++i) {
+    suma += salida[i];
+  }
+  if (suma > 1e-10) {
+    for (uint64_t i = 0; i < estados_interes; ++i) {
+      salida[i] /= suma;
     }
   }
 
-  return output;
+  return salida;
 }
 
 /**
- * @brief Método principal para calcular la distribución condicional P(X_I | X_C = c)
- * @param[in] query: Consulta condicional que especifica las variables de interés y condicionadas
- * @return Estructura con la distribución condicional resultante y métricas de ejecución
+ * @brief Método principal para calcular la distribución condicional
+ *        P(X_I | X_C = c)
+ * @param[in] consulta: Consulta condicional que especifica las variables de
+ *                      interés y condicionadas
+ * @return Estructura con la distribución condicional resultante y métricas de
+ *         ejecución
  */
-InferenceResult ConditionalInferenceEngine::computeConditional(const ConditionalQuery& query) {
-  InferenceResult result;
+InferenceResult ConditionalInferenceEngine::computeConditional(
+    const ConditionalQuery& consulta) {
+  InferenceResult resultado;
 
-  auto start = std::chrono::high_resolution_clock::now();
+  auto inicio = std::chrono::high_resolution_clock::now();
 
-  double* output = prob_cond_bin(query.getMaskC(), query.getValC(), query.getMaskI());
-  int number_interest_bits = countBits(query.getMaskI());
-  uint64_t interest_states = 1ULL << number_interest_bits;
+  double* salida =
+      prob_cond_bin(consulta.getMaskC(), consulta.getValC(),
+                    consulta.getMaskI());
+  int numero_bits_interes = countBits(consulta.getMaskI());
+  uint64_t estados_interes = 1ULL << numero_bits_interes;
   
-  auto distribution = std::make_unique<BinaryDistribution>(number_interest_bits);
-  for (uint64_t i = 0; i < interest_states; ++i) {
-    distribution->setProbability(i, output[i]);
+  auto distribucion =
+      std::make_unique<BinaryDistribution>(numero_bits_interes);
+  for (uint64_t i = 0; i < estados_interes; ++i) {
+    distribucion->setProbability(i, salida[i]);
   }
 
-  auto end = std::chrono::high_resolution_clock::now();
-  result.execution_time = std::chrono::duration<double, std::micro>(end - start).count();
-  result.states_evaluated = jointDistribution_.getStateSpaceSize();
-  result.distribution = std::move(distribution);
+  auto fin = std::chrono::high_resolution_clock::now();
+  resultado.tiempo_ejecucion =
+      std::chrono::duration<double, std::micro>(fin - inicio).count();
+  resultado.estados_evaluados =
+      distribucion_conjunta_.getStateSpaceSize();
+  resultado.distribucion = std::move(distribucion);
 
-  return result;
+  return resultado;
 }
 
 /**
- * @brief Método para verificar si una configuración es consistente con las condiciones
- * @param[in] state Estado completo
+ * @brief Método para verificar si una configuración es consistente con las
+ *        condiciones
+ * @param[in] estado Estado completo
  * @param[in] maskC Máscara de variables condicionadas
  * @param[in] valC Valores esperados
  */
-bool ConditionalInferenceEngine::isConsistent(uint64_t state, uint64_t maskC, uint64_t valC) const {
-  return (state & maskC) == valC;
+bool ConditionalInferenceEngine::isConsistent(uint64_t estado, uint64_t maskC,
+                                               uint64_t valC) const {
+  return (estado & maskC) == valC;
 }
 
 /**
  * @brief Método para extraer los bits de interés de un estado dado una máscara
- * @param[in] state: Estado completo
+ * @param[in] estado: Estado completo
  * @param[in] maskI: Máscara de variables de interés
  */
-uint64_t ConditionalInferenceEngine::extractInterestBits(uint64_t state, uint64_t maskI) const {
-  uint64_t result = 0;
-  int resultBit = 0;
+uint64_t ConditionalInferenceEngine::extractInterestBits(uint64_t estado,
+                                                          uint64_t maskI) const {
+  uint64_t resultado = 0;
+  int bit_resultado = 0;
   
   for (int bit = 0; bit < 64; ++bit) {
     if (maskI & (1ULL << bit)) {
-      if (state & (1ULL << bit)) {
-        result |= (1ULL << resultBit);
+      if (estado & (1ULL << bit)) {
+        resultado |= (1ULL << bit_resultado);
       }
-      resultBit++;
+      bit_resultado++;
     }
   }
   
-  return result;
+  return resultado;
 }
 
 /**
  * @brief Método para contar el número de bits a 1 en una máscara
- * @param[in] mask: Máscara a analizar
+ * @param[in] mascara: Máscara a analizar
  * @return Número de bits a 1 en la máscara
  */
-int ConditionalInferenceEngine::countBits(uint64_t mask) const {
-  int count = 0;
-  while (mask) {
-    count += mask & 1;
-    mask >>= 1;
+int ConditionalInferenceEngine::countBits(uint64_t mascara) const {
+  int cuenta = 0;
+  while (mascara) {
+    cuenta += mascara & 1;
+    mascara >>= 1;
   }
-  return count;
+  return cuenta;
 }

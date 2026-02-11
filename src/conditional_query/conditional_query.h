@@ -29,12 +29,22 @@ class ConditionalQuery {
   uint64_t getMaskM() const { return maskM_; }
   uint64_t getValC() const { return valC_; }
   
-  const std::vector<int>& getConditionedVariables() const { return conditioned_variables_; }
-  const std::vector<int>& getConditionedValues() const { return conditioned_values_; }
-  const std::vector<int>& getInterestVariables() const { return interest_variables_; }
+  const std::vector<int>& getConditionedVariables() const {
+    return variables_condicionadas_;
+  }
+  const std::vector<int>& getConditionedValues() const {
+    return valores_condicionados_;
+  }
+  const std::vector<int>& getInterestVariables() const {
+    return variables_interes_;
+  }
   
-  int getNumberConditionedVariables() const { return conditioned_variables_.size(); }
-  int getNumberInterestVariables() const { return interest_variables_.size(); }
+  int getNumberConditionedVariables() const {
+    return variables_condicionadas_.size();
+  }
+  int getNumberInterestVariables() const {
+    return variables_interes_.size();
+  }
   int getNumberMarginalizedVariables() const;
   
   void addConditionedVariable(int, int);
@@ -44,11 +54,11 @@ class ConditionalQuery {
   bool isValid() const;
   std::string toString() const;
     
-private:
-  int number_variables_;
-  std::vector<int> conditioned_variables_;
-  std::vector<int> conditioned_values_;
-  std::vector<int> interest_variables_;
+ private:
+  int numero_variables_;
+  std::vector<int> variables_condicionadas_;
+  std::vector<int> valores_condicionados_;
+  std::vector<int> variables_interes_;
   uint64_t maskC_;
   uint64_t valC_;
   uint64_t maskI_;
