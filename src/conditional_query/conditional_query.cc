@@ -42,13 +42,11 @@ void ConditionalQuery::addConditionedVariable(int variable_index, int value) {
   validateVariableIndex(variable_index);
   validateValue(value);
   
-  // Verificamos que no esté duplicada
   auto it = std::find(conditioned_variables_.begin(), conditioned_variables_.end(), variable_index);
   if (it != conditioned_variables_.end()) {
     throw std::invalid_argument("Variable ya condicionada: " + std::to_string(variable_index));
   }
   
-  // Verificamos que no esté entre las variables de interés
   it = std::find(interest_variables_.begin(), interest_variables_.end(), variable_index);
   if (it != interest_variables_.end()) {
     throw std::invalid_argument("Variable ya en el conjunto de interés: " + std::to_string(variable_index));
@@ -67,13 +65,11 @@ void ConditionalQuery::addConditionedVariable(int variable_index, int value) {
 void ConditionalQuery::addInterestVariable(int variable_index) {
   validateVariableIndex(variable_index);
   
-  // Verificamos que no esté duplicada
   auto it = std::find(interest_variables_.begin(), interest_variables_.end(), variable_index);
   if (it != interest_variables_.end()) {
     throw std::invalid_argument("Variable ya en el conjunto de interés: " + std::to_string(variable_index));
   }
   
-  // Verificamos que no esté en variables condicionadas
   it = std::find(conditioned_variables_.begin(), conditioned_variables_.end(), variable_index);
   if (it != conditioned_variables_.end()) {
     throw std::invalid_argument("Variable ya condicionada: " + std::to_string(variable_index));
@@ -92,7 +88,6 @@ void ConditionalQuery::computeMasks() {
   maskI_ = 0;
   maskM_ = 0;
   
-  // Calculamos la máscara y los valores de variables condicionadas
   for (size_t i = 0; i < conditioned_variables_.size(); ++i) {
     int varIdx = conditioned_variables_[i];
     int value = conditioned_values_[i];
@@ -101,12 +96,10 @@ void ConditionalQuery::computeMasks() {
     if (value == 1) { valC_ |= (1ULL << varIdx); }
   }
   
-  // Calculamos la máscara de variables de interés
   for (int varIdx : interest_variables_) {
     maskI_ |= (1ULL << varIdx);
   }
   
-  // Calculamos la máscara de variables a marginalizar
   uint64_t allMask = (1ULL << number_variables_) - 1;
   maskM_ = allMask & ~(maskC_ | maskI_);
 }
@@ -143,17 +136,14 @@ std::string ConditionalQuery::toString() const {
   
   oss << "Consulta: P(";
   
-  // Imprimimos las variables de interés
   for (size_t i = 0; i < interest_variables_.size(); ++i) {
     if (i > 0) oss << ", ";
     oss << "X" << (interest_variables_[i] + 1);
   }
   
-  // Imprimimos las variables condicionadas
   if (!conditioned_variables_.empty()) {
     oss << " | ";
     
-    // Variables condicionadas
     for (size_t i = 0; i < conditioned_variables_.size(); ++i) {
       if (i > 0) oss << ", ";
       oss << "X" << (conditioned_variables_[i] + 1) << "=" << conditioned_values_[i];
@@ -162,11 +152,10 @@ std::string ConditionalQuery::toString() const {
   
   oss << ")" << std::endl;
   
-  // Mostramos las máscaras en formato binario
-  oss << "  maskC: " << std::bitset<16>(maskC_).to_string().substr(16 - number_variables_) << std::endl;
-  oss << "  valC:  " << std::bitset<16>(valC_).to_string().substr(16 - number_variables_) << std::endl;
-  oss << "  maskI: " << std::bitset<16>(maskI_).to_string().substr(16 - number_variables_) << std::endl;
-  oss << "  maskM: " << std::bitset<16>(maskM_).to_string().substr(16 - number_variables_) << std::endl;
+  oss << "  maskC: " << std::bitset<64>(maskC_).to_string().substr(64 - number_variables_) << std::endl;
+  oss << "  valC:  " << std::bitset<64>(valC_).to_string().substr(64 - number_variables_) << std::endl;
+  oss << "  maskI: " << std::bitset<64>(maskI_).to_string().substr(64 - number_variables_) << std::endl;
+  oss << "  maskM: " << std::bitset<64>(maskM_).to_string().substr(64 - number_variables_) << std::endl;
   
   return oss.str();
 }

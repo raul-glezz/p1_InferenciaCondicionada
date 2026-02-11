@@ -37,12 +37,10 @@ double* ConditionalInferenceEngine::prob_cond_bin(uint64_t maskC, uint64_t valC,
   int number_interest_bits = countBits(maskI);
   uint64_t interest_states = 1ULL << number_interest_bits;
 
-  // Asignamos memoria para el resultado
   double* output = new double[interest_states];
   std::memset(output, 0, interest_states * sizeof(double));
 
   uint64_t total_states = jointDistribution_.getStateSpaceSize();
-  // Iteramos sobre todos los estados para acumular probabilidades consistentes con las condiciones
   for (uint64_t state = 0; state < total_states; ++state) {
     if (isConsistent(state, maskC, valC)) {
       uint64_t interest_idx = extractInterestBits(state, maskI);
@@ -50,7 +48,6 @@ double* ConditionalInferenceEngine::prob_cond_bin(uint64_t maskC, uint64_t valC,
     }
   }
 
-  // Normalizamos el resultado para obtener una distribución válida
   double sum = 0.0;
   for (uint64_t i = 0; i < interest_states; ++i) { sum += output[i]; }
   if (sum > 1e-10) {
@@ -76,7 +73,6 @@ InferenceResult ConditionalInferenceEngine::computeConditional(const Conditional
   int number_interest_bits = countBits(query.getMaskI());
   uint64_t interest_states = 1ULL << number_interest_bits;
   
-  // Creamos la distribución condicional resultante a partir del array de probabilidades
   auto distribution = std::make_unique<BinaryDistribution>(number_interest_bits);
   for (uint64_t i = 0; i < interest_states; ++i) {
     distribution->setProbability(i, output[i]);
@@ -97,7 +93,6 @@ InferenceResult ConditionalInferenceEngine::computeConditional(const Conditional
  * @param[in] valC Valores esperados
  */
 bool ConditionalInferenceEngine::isConsistent(uint64_t state, uint64_t maskC, uint64_t valC) const {
-  // Un estado es consistente si los bits marcados en maskC tienen los valores de valC
   return (state & maskC) == valC;
 }
 
@@ -107,7 +102,6 @@ bool ConditionalInferenceEngine::isConsistent(uint64_t state, uint64_t maskC, ui
  * @param[in] maskI: Máscara de variables de interés
  */
 uint64_t ConditionalInferenceEngine::extractInterestBits(uint64_t state, uint64_t maskI) const {
-  // Extraer solo los bits marcados en maskI y compactarlos
   uint64_t result = 0;
   int resultBit = 0;
   

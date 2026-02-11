@@ -117,7 +117,6 @@ void BinaryDistribution::display() const {
   std::cout << "=== Distribución Binaria (N=" << number_variables_ << ") ===" << std::endl;
   std::cout << std::fixed << std::setprecision(6);
   
-  // Imprimimos el encabezado de la tabla
   std::cout << "Config   |";
   for (int i = number_variables_ - 1; i >= 0; i--) {
     std::cout << " X" << (i + 1);
@@ -126,7 +125,6 @@ void BinaryDistribution::display() const {
   std::cout << std::string(10 + number_variables_ * 3 + 15, '-') << std::endl;
   
   for (uint64_t i = 0; i < state_space_size_; ++i) {
-    // Mostramos solo las configuraciones con probabilidad > 0
     if (probabilities_[i] > EPSILON) {
       std::string binary = indexToBinary(i);
       std::cout << std::setw(8) << binary << " |";
@@ -169,7 +167,6 @@ void BinaryDistribution::generateRandom() {
   for (uint64_t i = 0; i < state_space_size_; i++) {
     probabilities_[i] = dis(gen);
   }
-  // Normalizamos después de generar los valores aleatorios
   normalize();
 }
 
@@ -183,7 +180,7 @@ std::string BinaryDistribution::indexToBinary(uint64_t index) const {
   binary.reserve(number_variables_);
   
   for (int i = 0; i < number_variables_; ++i) {
-    binary = (index & 1 ? '1' : '0') + binary;
+    binary = std::string(1, (index & 1 ? '1' : '0')) + binary;
     index >>= 1;
   }
   
@@ -204,11 +201,9 @@ void BinaryDistribution::loadFromCSV(const std::string& filename) {
   std::string line;
   std::vector<std::pair<std::string, double>> data;
   
-  // Leemos el archivo línea por línea
   while (std::getline(file, line)) {
     if (line.empty()) continue;
     
-    // Separamos la máscara binaria y la probabilidad usando la coma como delimitador
     size_t commaPos = line.find(',');
     if (commaPos == std::string::npos) {
       throw std::runtime_error("Formato CSV inválido: " + line);
@@ -226,12 +221,10 @@ void BinaryDistribution::loadFromCSV(const std::string& filename) {
     throw std::runtime_error("Archivo CSV vacío");
   }
   
-  // Determinamos el número de variables a partir de la longitud de la primera máscara binaria
   number_variables_ = data[0].first.length();
   state_space_size_ = 1ULL << number_variables_;
   probabilities_.resize(state_space_size_, 0.0);
   
-  // Cargamos las probabilidades en el vector, validando la longitud de cada máscara binaria
   for (const auto& [binary, probability] : data) {
     if (binary.length() != static_cast<size_t>(number_variables_)) {
       throw std::runtime_error("Longitud de máscara inconsistente en CSV");
