@@ -13,21 +13,59 @@
 
 Este proyecto implementa un motor de inferencia para distribuciones de probabilidad conjuntas sobre variables binarias discretas. Permite calcular distribuciones condicionales utilizando máscaras binarias para especificar las variables de interés y las condiciones.
 
+## Clonar el Repositorio
+
+### Opción 1: HTTPS
+```bash
+git clone https://github.com/raul-glezz/p1_InferenciaCondicionada.git
+cd p1_InferenciaCondicionada
+```
+
+### Opción 2: SSH (recomendado)
+```bash
+git clone git@github.com:raul-glezz/p1_InferenciaCondicionada.git
+cd p1_InferenciaCondicionada
+```
+
 ## Estructura del Proyecto
 
 ```
 p1_InferenciaCondicionada/
-├── src/
+├── src/                                           # Código fuente
 │   ├── main.cc                                    # Programa de demostración
 │   ├── distribution/
 │   │   ├── i_distribution.h                       # Interfaz base
 │   │   └── binary_distribution/
 │   │       ├── binary_distribution.h              # Distribución binaria
 │   │       └── binary_distribution.cc
-│   └── conditional_inference_engine/
-│       ├── conditional_inference_engine.h         # Motor de inferencia
-│       └── conditional_inference_engine.cc
+│   ├── conditional_inference_engine/
+│   │   ├── conditional_inference_engine.h         # Motor de inferencia
+│   │   └── conditional_inference_engine.cc
+│   ├── conditional_query/
+│   │   ├── conditional_query.h                    # Consultas condicionales
+│   │   └── conditional_query.cc
+│   ├── performance_analyzer/
+│   │   ├── performance_analyzer.h                 # Análisis de rendimiento
+│   │   └── performance_analyzer.cc
+│   └── user_interface/
+│       ├── user_interface.h                       # Interfaz de usuario
+│       └── user_interface.cc
+├── obj/                                           # Archivos objeto (.o)
+├── data/                                          # Datos de entrada/salida
+│   ├── input/                                     # Distribuciones de prueba
+│   │   ├── 4vars.csv
+│   │   └── 20vars.csv
+│   └── output/                                    # Resultados del análisis
+│       ├── results_20vars.csv
+│       └── report_20vars.txt
+├── visualizer/                                    # Scripts de visualización
+│   ├── visualize_performance.py                   # Gráficas de rendimiento
+│   └── requirements.txt                           # Dependencias Python
+├── informe/                                       # Documentación del proyecto
+│   ├── INFORME.md                                 # Informe en Markdown
+│   └── INFORME.pdf                                # Informe en PDF
 ├── Makefile                                       # Sistema de compilación
+├── LICENSE                                        # Licencia del proyecto
 └── README.md                                      # Este archivo
 ```
 
