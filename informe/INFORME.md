@@ -7,7 +7,103 @@
 
 ---
 
-## 1. Resumen
+## 1. Enlace al repositorio 
+[Repositorio del Proyecto en GitHub](https://github.com/raul-glezz/p1_InferenciaCondicionada.git)
+
+## 2. Ejemplo de ejecución
+```
+enrique@MacBook-Air-de-Enrique-3 p1_InferenciaCondicionada % ./p1_InferenciaCondicionada
+1. Cargar o Generar Distribución
+2. Mostrar Distribución Actual
+3. Ejecutar Inferencia Condicional
+4. Análisis de Rendimiento
+5. Exportar Distribución a CSV
+6. Ayuda
+0. Salir
+Seleccione una opción [0-7]: 1
+
+1. Cargar desde archivo CSV
+2. Generar distribución aleatoria
+Seleccione opción [1-2]: 2
+
+Número de variables (1-20) [1-20]: 3
+  Variables: 3
+  Estados: 8
+
+Pulse Enter para continuar...
+1. Cargar o Generar Distribución
+2. Mostrar Distribución Actual
+3. Ejecutar Inferencia Condicional
+4. Análisis de Rendimiento
+5. Exportar Distribución a CSV
+6. Ayuda
+0. Salir
+Seleccione una opción [0-7]: 3
+
+
+--- Variables de interés ---
+Introduzca el número de variables de interés:  [1-2]: 1
+  Índice de variable (1-3) [1-3]: 1
+
+--- Variables condicionadas ---
+¿Agregar variables condicionadas? (s/n): s
+Introduzca el número de variables condicionadas:  [0-2]: 2
+  Índice de variable (1-3) [1-3]: 2
+  Valor (0 o 1) [0-1]: 0
+  Índice de variable (1-3) [1-3]: 3
+  Valor (0 o 1) [0-1]: 1
+
+Consulta: P(X1 | X2=0, X3=1)
+  maskC: 110
+  valC:  100
+  maskI: 001
+  maskM: 000
+=== Distribución Binaria (N=1) ===
+Config   | X1 | Probabilidad
+----------------------------
+       0 |  0 |   0.387976
+       1 |  1 |   0.612024
+
+Suma total de probabilidades: 1.000000
+
+--- Métricas de ejecución ---
+  Tiempo de ejecución: 11.42 μs
+  Estados evaluados: 8
+  Variables de interés: 1
+  Variables condicionadas: 2
+  Variables marginalizadas: 0
+
+¿Guardar resultado en CSV? (s/n):
+```
+
+## 3. Archivo CSV de ejemplo
+
+| Configuración | Probabilidad |
+|---------------|--------------|
+| 0000 | 0.06 |
+| 0001 | 0.08 |
+| 0010 | 0.05 |
+| 0011 | 0.07 |
+| 0100 | 0.09 |
+| 0101 | 0.04 |
+| 0110 | 0.03 |
+| 0111 | 0.11 |
+| 1000 | 0.10 |
+| 1001 | 0.02 |
+| 1010 | 0.06 |
+| 1011 | 0.08 |
+| 1100 | 0.05 |
+| 1101 | 0.07 |
+| 1110 | 0.09 |
+| 1111 | 0.10 |
+
+### Resultados:
+p(x1=0) = 0.4818181818
+p(x2=1|x1=0) = 0.4339622642
+p(x3=0|x1=0,x2=1) = 0.4782608696
+p(x4=1|x1=0,x2=1,x3=0) = 0.5454545455
+
+## 4. Análisis
 
 Este informe presenta un análisis exhaustivo del rendimiento del motor de inferencia condicional implementado para calcular probabilidades condicionales en distribuciones binarias discretas. Se realizaron **1,800 mediciones** sobre una distribución de **20 variables**, variando el número de variables de interés (1-10) y variables condicionadas (0-8).
 
@@ -20,9 +116,7 @@ Este informe presenta un análisis exhaustivo del rendimiento del motor de infer
 
 ---
 
-## 2. Metodología
-
-### 2.1 Configuración del Experimento
+### Configuración del Experimento
 
 - **Distribución base:** 20 variables binarias discretas
 - **Espacio de estados:** $2^{20}$ = 1,048,576 configuraciones
@@ -30,7 +124,7 @@ Este informe presenta un análisis exhaustivo del rendimiento del motor de infer
 - **Variables de interés evaluadas:** 1 a 10
 - **Variables condicionadas evaluadas:** 0 a 8
 
-### 2.2 Métricas Recopiladas
+### Métricas Recopiladas
 
 Para cada configuración se midió:
 - Tiempo de ejecución (microsegundos)
@@ -39,9 +133,9 @@ Para cada configuración se midió:
 
 ---
 
-## 3. Análisis de Resultados
+## Análisis de Resultados
 
-### 3.1 Estadísticas Globales
+### Estadísticas Globales
 
 | Métrica | Valor |
 |---------|-------|
@@ -51,7 +145,7 @@ Para cada configuración se midió:
 | **Tiempo máximo** | 128,880 μs |
 | **Desviación estándar** | 25,752.2 μs |
 
-### 3.2 Impacto de las Variables de Interés
+### Impacto de las Variables de Interés
 
 #### Tabla 1: Tiempo de ejecución según variables de interés (0 condicionadas)
 
@@ -78,7 +172,7 @@ Para cada configuración se midió:
 
 **Observación:** El incremento de variables de interés aumenta el tiempo de ejecución de forma aproximadamente lineal, con un incremento del **6-7%** por variable adicional.
 
-### 3.3 Impacto de las Variables Condicionadas
+### Impacto de las Variables Condicionadas
 
 #### Tabla 2: Reducción de tiempo según variables condicionadas (1 variable de interés)
 
@@ -110,7 +204,7 @@ Para cada configuración se midió:
 
 **Observación clave:** Cada variable condicionada adicional reduce el tiempo de ejecución aproximadamente a la **mitad**, siguiendo un patrón exponencial decreciente.
 
-### 3.4 Análisis Matricial Completo
+### Análisis Matricial Completo
 
 #### Tabla 3: Matriz de tiempos de ejecución (μs)
 
@@ -133,7 +227,7 @@ Para cada configuración se midió:
 - <span style="color: #ff6f00">**Naranja**</span> (20,000-50,000 μs): Rendimiento moderado
 - <span style="color: #d32f2f">**Rojo**</span> (> 50,000 μs): Alto tiempo de ejecución
 
-### 3.5 Visualización del Rendimiento
+### Visualización del Rendimiento
 
 **Factores que afectan el tiempo de ejecución:**
 
@@ -151,9 +245,9 @@ Para cada configuración se midió:
 
 ---
 
-## 4. Observaciones Clave
+## Observaciones Clave
 
-### 4.1 Eficiencia del Condicionamiento
+### Eficiencia del Condicionamiento
 
 El condicionamiento de variables demuestra ser **extremadamente efectivo** para reducir el tiempo de cálculo:
 
@@ -161,7 +255,7 @@ El condicionamiento de variables demuestra ser **extremadamente efectivo** para 
 - Con **8 variables condicionadas**, el tiempo se reduce al **~2%** del original
 - La reducción es consistente independientemente del número de variables de interés
 
-### 4.2 Escalabilidad
+### Escalabilidad
 
 El sistema muestra patrones de escalabilidad predecibles:
 
@@ -171,7 +265,7 @@ El sistema muestra patrones de escalabilidad predecibles:
 
 ---
 
-## 5. Análisis Comparativo
+## Análisis Comparativo
 
 ### Eficiencia Relativa por Configuración
 
@@ -194,7 +288,7 @@ El sistema muestra patrones de escalabilidad predecibles:
 
 ---
 
-## 6. Entrorno de Ejecución
+## Entrorno de Ejecución
 
 - **Compilador:** g++ con optimización -std=c++23
 - **Arquitectura:** x86_64/ARM64
@@ -203,7 +297,7 @@ El sistema muestra patrones de escalabilidad predecibles:
 
 ---
 
-## 7. Porcentajes de participación de cada miembro
+## Porcentajes de participación de cada miembro
 
 | Miembro | Porcentaje de Participación |
 |---------|-----------------------------|
